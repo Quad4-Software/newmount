@@ -213,7 +213,7 @@ def test_bad_fstype_raises_mount_error(userns: Runner) -> None:
 def test_mount_proc(userns: Runner) -> None:
     def body() -> None:
         # proc refuses to mount unless the caller's active pid namespace
-        # is owned by the caller's user namespace; unshare(CLONE_NEWPID)
+        # is owned by the caller's user namespace. unshare(CLONE_NEWPID)
         # only moves future children, so fork once to get inside it
         from tests.conftest import CLONE_NEWPID, unshare
 

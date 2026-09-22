@@ -11,8 +11,8 @@ mount(2)/umount2(2) calls, and the new mount API (kernel 5.2+) built on
 fsopen, fsconfig, fsmount, open_tree, move_mount, fspick and
 mount_setattr.
 
-Requires Python 3.10+ and Linux. Mounting needs CAP_SYS_ADMIN; an
-unprivileged process gets there inside a user+mount namespace
+Requires Python 3.10+ and Linux. Mounting needs CAP_SYS_ADMIN, which an
+unprivileged process gets inside a user+mount namespace
 (`unshare -Urm`).
 
 ## Install

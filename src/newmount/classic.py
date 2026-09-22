@@ -59,7 +59,7 @@ def mount(
 
 
 def umount2(target: _Path, flags: int = 0) -> None:
-    """Unmount with umount2(2); flags are MNT_* and UMOUNT_* bits."""
+    """Unmount with umount2(2). Flags are MNT_* and UMOUNT_* bits."""
     _syscall.umount2(os.fsencode(target), flags)
 
 

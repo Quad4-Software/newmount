@@ -3,7 +3,7 @@
 
 The new mount API needs CAP_SYS_ADMIN. An unprivileged caller gets there
 by unsharing a user namespace, but only the parent may write the child's
-/proc/<pid>/{uid,gid}_map; a process inside the new namespace cannot map
+/proc/<pid>/{uid,gid}_map. A process inside the new namespace cannot map
 itself. run_in_userns therefore forks, unshares CLONE_NEWUSER in the
 child, has the parent write the id maps, then unshares CLONE_NEWNS and
 runs the test body. This mirrors the sandboxkit sandbox pattern.
@@ -64,7 +64,7 @@ def _child_body(fn: Callable[[], None], ctl_w: int, ack_r: int, res_w: int) -> N
 def run_in_userns(fn: Callable[[], None]) -> tuple[bool, str]:
     """Run fn in a forked child inside fresh user+mount namespaces.
 
-    Returns (ok, message); message carries the child's traceback when it
+    Returns (ok, message). Message carries the child's traceback when it
     raised. The child exits through os._exit, so nothing runs twice.
     """
     ctl_r, ctl_w = os.pipe()
