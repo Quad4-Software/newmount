@@ -4,7 +4,7 @@
 import ctypes
 
 import newmount
-from newmount import _syscall
+import newmount._syscall
 
 
 def test_mount_flags_match_sys_mount_h() -> None:
@@ -133,7 +133,7 @@ def test_at_flags_match_fcntl_h() -> None:
 
 def test_syscall_numbers() -> None:
     # asm-generic numbering, identical on x86_64, i386, aarch64, riscv
-    nrs = _syscall._syscall_numbers()
+    nrs = newmount._syscall._syscall_numbers()
     assert nrs.open_tree == 428
     assert nrs.move_mount == 429
     assert nrs.fsopen == 430

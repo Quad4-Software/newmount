@@ -8,7 +8,7 @@ import sys
 import pytest
 
 import newmount
-from newmount import _syscall
+import newmount._syscall
 
 
 def test_mount_error_is_oserror() -> None:
@@ -19,7 +19,7 @@ def test_mount_error_is_oserror() -> None:
 def test_call_enosys_maps_to_unsupported() -> None:
     # a syscall number that does not exist returns ENOSYS
     with pytest.raises(newmount.UnsupportedError) as excinfo:
-        _syscall._call(0x7FFFFFFF)
+        newmount._syscall._call(0x7FFFFFFF)
     assert excinfo.value.errno == errno.ENOSYS
 
 
@@ -43,10 +43,10 @@ def test_mount_error_preserves_errno() -> None:
 def test_unsupported_arch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(_syscall, "_numbers", None)
+    monkeypatch.setattr(newmount._syscall, "_numbers", None)
     monkeypatch.setattr(platform, "machine", lambda: "vax9000")
     with pytest.raises(newmount.UnsupportedError):
-        _syscall._syscall_numbers()
+        newmount._syscall._syscall_numbers()
 
 
 def test_fsconfig_binary_requires_bytes() -> None:

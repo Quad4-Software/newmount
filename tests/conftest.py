@@ -98,11 +98,9 @@ def _parent_run(pid: int, ctl_r: int, ack_w: int, res_r: int) -> tuple[bool, str
     ok = os.read(ctl_r, 1) == b"1"
     ack = b"1"
     if ok:
-        try:
+        with contextlib.suppress(OSError):
             _write_id_maps(pid)
             ack = b"0"
-        except OSError:
-            pass
     with contextlib.suppress(OSError):
         os.write(ack_w, ack)
     err = bytearray()

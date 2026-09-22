@@ -17,8 +17,8 @@ import newmount
 _NOT_A_FS_FD = -1
 
 
-def _null_fd() -> int:
-    return os.open("/dev/null", os.O_RDONLY)
+def _spare_fd() -> int:
+    return os.dup(0)
 
 
 def test_fsopen_unprivileged() -> None:
@@ -33,20 +33,24 @@ def test_fsconfig_bad_fd() -> None:
 
 
 def test_fsconfig_each_command_bad_fd() -> None:
-    for cmd, value in (
-        (newmount.FSCONFIG_SET_FLAG, None),
-        (newmount.FSCONFIG_SET_BINARY, b"blob"),
-        (newmount.FSCONFIG_SET_PATH, tempfile.gettempdir()),
-        (newmount.FSCONFIG_SET_PATH_EMPTY, ""),
-        (newmount.FSCONFIG_SET_FD, None),
-        (newmount.FSCONFIG_CMD_CREATE, None),
-        (newmount.FSCONFIG_CMD_RECONFIGURE, None),
-        (newmount.FSCONFIG_CMD_CREATE_EXCL, None),
-    ):
-        aux = 0 if cmd != newmount.FSCONFIG_SET_FD else _null_fd()
-        with pytest.raises(newmount.MountError) as excinfo:
-            newmount.fsconfig(_NOT_A_FS_FD, cmd, "key", value, aux)
-        assert excinfo.value.errno in (errno.EBADF, errno.EINVAL)
+    aux_fd = _spare_fd()
+    try:
+        for cmd, value in (
+            (newmount.FSCONFIG_SET_FLAG, None),
+            (newmount.FSCONFIG_SET_BINARY, b"blob"),
+            (newmount.FSCONFIG_SET_PATH, tempfile.gettempdir()),
+            (newmount.FSCONFIG_SET_PATH_EMPTY, ""),
+            (newmount.FSCONFIG_SET_FD, None),
+            (newmount.FSCONFIG_CMD_CREATE, None),
+            (newmount.FSCONFIG_CMD_RECONFIGURE, None),
+            (newmount.FSCONFIG_CMD_CREATE_EXCL, None),
+        ):
+            aux = 0 if cmd != newmount.FSCONFIG_SET_FD else aux_fd
+            with pytest.raises(newmount.MountError) as excinfo:
+                newmount.fsconfig(_NOT_A_FS_FD, cmd, "key", value, aux)
+            assert excinfo.value.errno in (errno.EBADF, errno.EINVAL)
+    finally:
+        os.close(aux_fd)
 
 
 def test_fsmount_bad_fd() -> None:
@@ -91,9 +95,8 @@ def test_attach_and_apply_attrs_bad_fd() -> None:
 
 
 def test_context_methods_on_foreign_fd() -> None:
-    fd = _null_fd()
-    ctx = newmount.FsContext._adopt(fd)
-    try:
+    fd = _spare_fd()
+    with newmount.FsContext._adopt(fd) as ctx:
         with pytest.raises(newmount.MountError) as excinfo:
             ctx.set_flag("ro")
         assert excinfo.value.errno in (errno.EBADF, errno.EINVAL)
@@ -115,15 +118,12 @@ def test_context_methods_on_foreign_fd() -> None:
             ctx.reconfigure()
         with pytest.raises(newmount.MountError):
             ctx.mount()
-    finally:
-        ctx.close()
     assert ctx.closed
 
 
 def test_mountfd_methods_on_foreign_fd() -> None:
-    fd = _null_fd()
-    mnt = newmount.MountFd(fd)
-    try:
+    fd = _spare_fd()
+    with newmount.MountFd(fd) as mnt:
         assert not mnt.closed
         assert mnt.fileno() == fd
         assert repr(mnt)
@@ -131,8 +131,6 @@ def test_mountfd_methods_on_foreign_fd() -> None:
             mnt.attach(tempfile.gettempdir())
         with pytest.raises(newmount.MountError):
             mnt.apply_attrs(set=newmount.MOUNT_ATTR_RDONLY)
-    finally:
-        mnt.close()
     assert mnt.closed
     mnt.close()  # idempotent
 
