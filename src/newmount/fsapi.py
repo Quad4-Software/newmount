@@ -5,7 +5,7 @@ The syscall layer builds a detached mount with fsopen/fsconfig/fsmount,
 attaches it with move_mount, clones an existing tree with open_tree,
 reopens a mount for reconfiguration with fspick and flips attributes in
 place with mount_setattr. All of it requires CAP_SYS_ADMIN in the user
-namespace owning the mount namespace; unprivileged callers get there
+namespace owning the mount namespace. Unprivileged callers get there
 through a user+mount namespace.
 
 Kernel reference:
@@ -120,7 +120,7 @@ def move_mount(
     """move_mount(2): attach a detached mount or relocate an existing one.
 
     Pass the mount fd as from_dfd with an empty from_path and
-    MOVE_MOUNT_F_EMPTY_PATH to attach it; see attach() for the shortcut.
+    MOVE_MOUNT_F_EMPTY_PATH to attach it. See attach() for the shortcut.
     """
     _syscall.move_mount(
         from_dfd,
@@ -165,7 +165,7 @@ def apply_attrs(
 ) -> None:
     """Change mount attributes in place via mount_setattr(2).
 
-    set and clear take MOUNT_ATTR_* bits; only one atime value may appear
+    set and clear take MOUNT_ATTR_* bits. Only one atime value may appear
     in set. propagation takes MS_PRIVATE, MS_SHARED, MS_SLAVE or
     MS_UNBINDABLE, or 0 to leave it unchanged. recursive applies the
     change to the whole subtree beneath path.
@@ -188,7 +188,7 @@ def new_api_supported() -> bool:
     """Probe whether the kernel provides the new mount API.
 
     fsopen(2) fails with EPERM without CAP_SYS_ADMIN and with ENODEV for
-    an unknown filesystem; both mean the API exists. ENOSYS maps to
+    an unknown filesystem. Both mean the API exists. ENOSYS maps to
     UnsupportedError and means the kernel predates 5.2.
     """
     try:
@@ -211,7 +211,7 @@ def open_tree_clone(
 ) -> Tree:
     """Clone the mount tree rooted at path into a detached Tree.
 
-    recursive passes AT_RECURSIVE so the whole subtree is cloned; with
+    recursive passes AT_RECURSIVE so the whole subtree is cloned. With
     recursive=False only the topmost mount is cloned. The clone is not
     attached anywhere until Tree.attach() is called.
     """
@@ -250,12 +250,12 @@ class _OwnedFd:
 
     def __copy__(self) -> _OwnedFd:
         raise TypeError(
-            f"{type(self).__name__} cannot be copied; it owns a kernel file descriptor"
+            f"{type(self).__name__} cannot be copied: it owns a kernel file descriptor"
         )
 
     def __deepcopy__(self, memo: dict[int, object]) -> _OwnedFd:
         raise TypeError(
-            f"{type(self).__name__} cannot be copied; it owns a kernel file descriptor"
+            f"{type(self).__name__} cannot be copied: it owns a kernel file descriptor"
         )
 
     def __repr__(self) -> str:
