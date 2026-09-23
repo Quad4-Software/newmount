@@ -129,8 +129,10 @@ def _userns_available() -> bool:
 
 USERNS_AVAILABLE = _userns_available()
 
+_STRICT = os.environ.get("Q4_REQUIRE_LIVE") == "1"
+
 requires_userns = pytest.mark.skipif(
-    not USERNS_AVAILABLE,
+    not USERNS_AVAILABLE and not _STRICT,
     reason="unprivileged user+mount namespaces unavailable",
 )
 
